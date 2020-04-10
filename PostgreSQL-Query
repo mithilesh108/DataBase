@@ -1,0 +1,152 @@
+To check PostgreSQL version : SELECT version();  
+(PostgreSQL 11.5 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 4.8.5 20150623 (Red Hat 4.8.5-36), 64-bit)
+
+To check PostgreSQL database size : SELECT pg_size_pretty(pg_database_size('db_name'));           -- 12 GB  database size
+
+To check PostgreSQL database's table size : SELECT pg_size_pretty(pg_relation_size('table_name'));   -- student-4104 MB
+
+select pg_database_size('db_name ');  --846275231
+
+SELECT pg_size_pretty(pg_database_size(''db_name ')); -- 807 MB  database size
+
+show timezone;             -- Asia/Calcutta
+
+select current_time;       -- 13:01:23
+
+select current_date;       -- 2020-04-09
+
+select user;                       --  my_DEV
+
+SELECT current_database(); --   my_DEV
+
+select count(*) from table_name where name in ('IA','RA');
+
+select count(*) from table_name where name not in ('IA','RA');
+
+select * from table_name WHERE id BETWEEN 20530001 and 20539999;
+
+SELECT * FROM Products WHERE ProductName BETWEEN 'Carnarvon AND 'Mozzarella’ ORDER BY Product;
+
+SELECT * FROM Products WHERE Price BETWEEN 10 AND 20 AND CategoryID NOT IN (1,2,3);
+
+select id as "Contact Person id" from employee; (double quotes is necessory)
+
+select * from runsummary where start_time between '2020-04-02 11:43:06' and '2020-04-03 11:43:06';
+
+SELECT * FROM table_name where name='RA' ORDER BY no,name limit 50000 offset 0;(will fetch 50000 rows but starts from 0)
+
+SELECT * FROM table_name  where name='RA' ORDER BY no ,name limit 50000 offset 1000;
+(will fetch 50000 rows but starts from 1001)
+
+select * from table_name where folder_path_1='General documents';      
+
+select * from table_name where folder_path_1 like '%General%' or name like '%RA%';
+
+select * from table_name where folder_path_1 in ('General documents') or name in ('RA');
+
+select * from tablename where not folder_path_1 = 'General and not folder_path_1 = 'Publis;
+
+select distinct folder_path_0,folder_path_1 from table_orm;
+
+select name,id from table_orm where name is not null;
+
+select name,_id from table_orm where name is  null;
+
+select status_code, 'ram' as name ,status_name as qqqq from runsummary; (will give three column with name data will ram)
+
+select CONCAT(status_code,'-qqq-',status_name) as qqqq from runsummary; (wil concanate three columns)
+
+select * from inn_products,keywords where inn_products.record_id = keywords.record_id;
+(can join two tabe without join query)
+
+select inn_products.inn,keywords.keyword from inn_products,keywords;
+
+select i.inn as inn,k.keyword as key from inn_products as i,keywords as k where i.record_id=k.record_id;
+
+update tablename set status_code='abc' where status_name like 'Compl%'; --LIKE 'a%'  Finds any values that start with "a"
+
+update tablename set status_code='ram' where status_name like '%Comp'; -- LIKE '%a'  Finds any values that end with "a"
+
+update tablename set status_code='ram' where status_name like '%Comp%'; 
+--LIKE '%or%' Finds any values that have "or" in any position
+
+SELECT * FROM tablename WHERE CAST(batch_id as CHAR) LIKE '2%'; -- to fetch record from integer columns
+
+select * from tablename where batch_id = (select max(_id) as valye  from tablename);
+
+select * from tablename order by _id desc limit 1 offset 1;
+
+select avg(_id) as valye  from tablename;
+
+select min(_id) as valye  from tablename;
+
+select max(_id) as valye  from tablename;
+
+select count(_id) as valye  from tablename;
+
+select sum(_id) as valye  from tablename;
+
+ 
+
+TO DOWNLOAD POSTGRESQL IN UBUNTU
+
+----------------------------------------
+
+sudo apt update
+
+sudo apt install postgresql postgresql-contrib
+
+ 
+
+Switch over to the postgres account on your server by typing : sudo -i -u postgres
+
+You can now access a Postgres prompt immediately by typing : psql
+
+Exit out of the connected database       :  \q
+
+You can see your all table by typing     :  \d
+
+To see table colummns details            : \d tablename
+
+To print all tables from all schemas     : \dt *.*
+
+To print all table from specific schema  : \dt aigle.*
+
+To connect database                      : \c db_name
+
+To show all database                     : \l
+
+To disconnect db                         : \q
+
+ 
+
+CREATE TABLE Employee (id int PRIMARY KEY,Name varchar (50) NOT NULL,Age varchar (25) 
+NOT NULL,location varchar(25),dob date);
+
+insert into employee(id,name,age,location) values(1,'Mithilesh',20,'Bihar');
+
+insert into employee(id,name,age,location,dob) VALUES (2,'Mithu',20,'Bgp', '2017-04-28');
+
+insert into employee(id,name,age,location,dob) VALUES (3,'Mithu',20,'Bgp', '2018/04/18');
+
+insert into employee(id,name,age,location,dob) VALUES (5,'Mukesh',20,'Chennai', '4/1/2000');
+
+ALTER TABLE employee ADD jod timestamp;
+
+-----------------------------------------------------------------------------------------------------
+
+JOINS STATEMENTS :
+
+select * from emplyee as r inner join student as d on d.record_id = r.record_id;
+
+select * from emplyee as k full outer join  student as i on i.record_id = k.record_id;
+
+select * from emplyee as k left join student as i on i.record_id = k.record_id;
+
+SELECT  * from employee as k right join student as i on i.record_id = k.record_id;
+
+SELECT * FROM table1 UNION SELECT * FROM table2;( The UNION operator selects only distinct values by default)
+
+SELECT * FROM table1 UNION ALL SELECT * FROM table2 ORDER BY City; (To select duplicate values also)
+
+ 
