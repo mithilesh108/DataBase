@@ -1,0 +1,469 @@
+DECLARE
+
+   <declarations section>
+
+BEGIN
+
+   <executable command(s)>
+
+EXCEPTION
+
+   <exception handling>
+
+END;
+
+------------------------------
+
+DO $$
+
+[ <<label>> ]
+
+DECLARE
+
+    declarations
+
+BEGIN
+
+   statements; ...
+
+END [ label ]$$;
+
+If you use the double dollar ($$) you can avoid quoting issues. You can also use a token between $$ like  $function$ or $procedure$.
+
+The double dollar ($$) is a substitution of a single quote (‘).  When you develop a PL/pgSQL block, a function, or a stored procedure, you have to pass its body in the form of a string literal
+
+----------------------------------------------------------------------
+
+Notice that the DO statement does not belong to the block. It is used to execute an anonymous block.
+
+DO $$
+
+BEGIN
+
+  RAISE NOTICE 'Hello World! postgresql';
+
+END $$;
+
+-----------------------------------------------
+
+The following example illustrates a very simple block. It is called an anonymous block
+
+DO $$
+
+DECLARE
+
+  counter integer := 3;
+
+BEGIN
+
+   counter := counter + 1;
+
+   RAISE NOTICE 'The current value of counter is %', counter;
+
+END $$;
+
+--------------------------------------------------
+
+CREATE FUNCTION firstdemo1()
+
+RETURNS VOID AS $$
+
+begin
+
+  RAISE NOTICE 'First World';
+
+end $$ LANGUAGE plpgsql;
+
+--------------------------------------------------
+
+-- nested block
+
+DO $$
+
+<<outer_block>>
+
+DECLARE
+
+  counter integer := 0;
+
+BEGIN
+
+   counter := counter + 5;
+
+   RAISE NOTICE 'The current value of counter is %', counter;
+
+   DECLARE
+
+       counter integer := 0;
+
+   BEGIN
+
+       counter := counter + 10;
+
+       RAISE NOTICE 'subblock is %', counter;
+
+       RAISE NOTICE 'outer block is %', outer_block.counter;
+
+   END;
+
+   RAISE NOTICE 'the outer block is %', counter;
+
+END outer_block $$;
+
+---------------------------------------------------
+
+Addition two values
+
+do $$    -- do for anonymous block
+
+DECLARE 
+
+   a integer := 30; 
+
+   b integer := 40; 
+
+   c integer; 
+
+   f real; 
+
+begin 
+
+   c := a + b; 
+
+   RAISE NOTICE 'Value of c: %', c; 
+
+   f := 100.0/3.0; 
+
+   RAISE NOTICE 'Value of f: %', f; 
+
+end $$;
+
+--------------------------------------------------
+
+Global and local variable & inner block
+
+ 
+
+do $outer_blok$
+
+<<outer_block>>
+
+declare
+
+ -- global varibale
+
+  val1 integer := 10;
+
+  val2 integer := 20;
+
+begin
+
+       raise notice 'global value1 : %',val1;
+
+    declare
+
+    -- local variable
+
+     val1 integer := 100;
+
+     val2 integer := 200;
+
+    begin
+
+           raise notice 'Local value1 : %',val1;
+
+           raise notice 'Local value2 : %',val2;
+
+          raise notice 'global value from local block %',outer_block.val1;
+
+    end;
+
+    raise notice 'global value2 : %',val2;
+
+end outer_block $outer_blok$;
+
+---------------------------------------------------------------------------------------------
+
+PL/pgSQL different datatypes example
+do $$
+
+declare
+
+id integer := 1;
+
+name varchar(50) := 'mithilesh';
+
+address varchar(50) := 'bgp';
+
+salary numeric(10,3) := 10000;
+
+time_at time := NOW();
+
+timedate_at time := NOW();
+
+date_at date := NOW();
+
+created_at timestamp := '2020-04-15'; --both is working -,/
+
+date_at date := '2000/04/10';
+
+begin
+
+       RAISE NOTICE '%', time_at;  -- 10:36:32.569596
+
+      RAISE NOTICE '%', date_at;  -- 2020-04-15
+
+       RAISE NOTICE '%', timedate_at;  -- 2020-04-15 10:43:05.831327
+
+       raise notice 'My details  %',id;
+
+   RAISE NOTICE '% % % has been paid % USD', id, name, address, salary;
+
+              -- 1 mithilesh bgp has been paid 10000.000 USD
+
+end $$;
+
+-------------------------------------------------------------------------------------------------
+
+PL/pgSQL to sleep run time for some time example
+DO $$
+
+DECLARE
+
+   created_at time := NOW();
+
+BEGIN
+
+   RAISE NOTICE '%', created_at;
+
+   PERFORM pg_sleep(100);-- next line will execute after 100 secs
+
+   RAISE NOTICE '%', created_at;
+
+END $$;
+
+--------------------------------------------------------------------------------------------
+
+PL/pgSQL fetch datatype from table’s column example
+DO $$
+
+declare
+
+   c_id customers.id%type := 1;
+
+   c_namee  customers.namee%type :='mithilesh';
+
+   c_addr customers.address%type := 'bgp';
+
+   c_sal  customers.salary%type := 100000.0;
+
+ 
+
+BEGIN
+
+      RAISE NOTICE  'Id Name address and salery : % % % %',c_id , c_namee , c_addr , c_sal;
+
+END $$;
+
+-----------------------------------------------------------------------------------------------
+
+PL/pgSQL constants example
+
+DO $$
+
+DECLARE
+
+   VAT constant NUMERIC := 0.1;
+
+   net_price    NUMERIC := 20.5;
+
+  start_at CONSTANT time := now();
+
+BEGIN
+
+   RAISE NOTICE 'The selling price is %', net_price * ( 1 + VAT );
+
+   RAISE NOTICE 'Start executing block at %', start_at;
+
+--   VAT := 0.05;  will throw error
+
+END $$;
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+PL/pgSQL Errors and Messages
+It is important to note that the ASSERT statement is used for debugging only.
+
+DO $$
+
+BEGIN
+
+  RAISE INFO 'information message %', now() ;
+
+  RAISE LOG 'log message %', now();
+
+  RAISE DEBUG 'debug message %', now();
+
+  RAISE WARNING 'warning message %', now();
+
+  RAISE NOTICE 'notice message %', now();
+
+END $$;
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+Introduction to CREATE FUNCTION statement
+It won’t return anything…!
+CREATE FUNCTION hello_world()
+
+RETURNS VOID AS $$
+
+begin
+
+  RAISE NOTICE 'Hello World';
+
+END ;   --while run it will look no language specified if you don’t pass  LANGUAGE plpgsql;
+
+$$ LANGUAGE plpgsql;
+
+select hello_world();
+
+It will  return int value…!
+CREATE FUNCTION numbe(val integer) RETURNS integer AS $$
+
+DECLARE
+
+num integer := 10;
+
+BEGIN
+
+RETURN val + 1 + num;
+
+END; $$
+
+LANGUAGE PLPGSQL;
+
+ 
+
+SELECT numbe(3); -- it will return 14
+-------------------ADDITION TWO NUMBERSS-------------------------
+
+CREATE FUNCTION addition(val1 integer, val2 integer) RETURNS integer AS $$
+
+DECLARE
+
+num integer := 10;
+
+BEGIN
+
+       num := val1 + val2;
+
+RETURN  num;
+
+END; $$
+
+LANGUAGE PLPGSQL;
+
+ 
+
+SELECT addition(3,5);
+-----------------------------------------------------------------------------------------------------------
+
+CREATE FUNCTION sum_n_product(IN x int,IN y int, OUT sum int, OUT prod int) AS $$
+
+BEGIN
+
+    sum := x + y;
+
+    prod := x * y;
+
+END;
+
+$$ LANGUAGE plpgsql;
+
+ 
+
+SELECT sum_n_product(33,5);
+
+Notice that if we use IN and OUT arguments, we don’t use the RETURNS statement in the function definition. Also, if you define the arguments with IN or OUT, there is no need to put both. You can define IN arguments without the need to put OUT arguments or viceversa.
+
+-----------------------------------------------------------------------------------------------------------
+
+CREATE FUNCTION function_name(type,type)
+
+RETURNS type AS
+
+DECLARE
+
+  val1 alias for $1;
+
+  val2 alias for $2;
+
+BEGIN
+
+  v1:= abs($1); -- $1 refers to the first input argument (reading from left to right)
+
+  v2:= $2; -- $2 refers to the second input argument (reading from left to right)
+
+END;
+
+LANGUAGE 'plpgsql';
+
+--------------------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION get_age(p_customer_id INTEGER)
+
+       RETURNS INTEGER AS $$
+
+DECLARE
+
+       salary INTEGER;
+
+BEGIN
+
+       -- get the max salary based on id
+
+       SELECT INTO salary max(age) FROM customers WHERE id=p_customer_id;
+
+ 
+
+       RETURN salary;
+
+END; $$ LANGUAGE plpgsql;
+
+Select get_age(2);
+
+-------------------------------------------------------
+
+Get max salary
+
+CREATE OR REPLACE FUNCTION get_max_salary()
+
+       RETURNS INTEGER AS $$
+
+DECLARE
+
+       maxsalary INTEGER;
+
+BEGIN
+
+       -- get the max salary based on id
+
+       SELECT INTO maxsalary max(salary) FROM customers;-- WHERE id=p_customer_id;
+
+ 
+
+       RETURN maxsalary;
+
+END; $$ LANGUAGE plpgsql;
+
+ 
+
+select get_max_salary();
+
+-------------------------------------------------------
+
+PL/pgSQL Function That Returns A Table
+ 
+
+ 
