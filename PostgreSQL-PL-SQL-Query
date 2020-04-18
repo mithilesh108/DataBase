@@ -464,6 +464,497 @@ select get_max_salary();
 -------------------------------------------------------
 
 PL/pgSQL Function That Returns A Table
+CREATE OR REPLACE FUNCTION get_emp_name_sal (p_pattern VARCHAR)
+
+       RETURNS TABLE ( emp_name VARCHAR, emp_salary INT )
+
+AS $$
+
+BEGIN
+
+       RETURN QUERY select namee, cast( salary as integer) from sample.customers where namee ILIKE p_pattern ;
+
+END; $$  LANGUAGE 'plpgsql';
+
  
+
+SELECT * from get_emp_name_sal ('K%');
+
+emp_name      emp_sal
+
+Komal         4500
+
+Khilan        1500
+
+kaushik      2000
+
+select get_emp_name_sal('K%'); (PostgreSQL returns a table with one column that holds the array of films.)
+
+get_emp_name_sal
+
+(Komal,4500)
+
+(Khilan,1500)
+
+(kaushik,2000)
+
+-----------------------------------------------------------------------------------------------------------------
+
+To fetch multiple columns from a table :
+
+CREATE OR REPLACE FUNCTION sample.get_all_emps (sal integer)
+
+       RETURNS TABLE ( emp_name VARCHAR, emp_age INT, emp_add varchar, emp_salary INT )
+
+AS $$
+
+BEGIN
+
+       RETURN QUERY select namee,age,address,salary from sample.customers where salary > sal ;
+
+END; $$  LANGUAGE 'plpgsql';
+
+ 
+
+SELECT * from sample.get_all_emps (2000);
+
+select sample.get_all_emps(2000);
+
+DROP FUNCTION IF EXISTS sample.get_all_emps(INT);
+
+--------------------------------------------------------------------------------------------------------------------------------------
+
+The simplest form of PL/pgSQL IF statement
+
+IF condition THEN
+
+   statement;
+
+END IF;
+
+ 
+
+DO $$
+
+DECLARE
+
+  a integer := 10;
+
+  b integer := 20;
+
+BEGIN
+
+  IF a > b THEN
+
+       RAISE NOTICE 'a is greater than b';
+
+  END IF;
+
+ 
+
+  IF a = b THEN
+
+       RAISE NOTICE 'a is equal to b';
+
+  END IF;
+
+END $$;
+
+--------------------------------------------------------------------------------------------
+
+PL/pgSQL IF THEN ELSE statement
+
+IF condition THEN
+
+     statements;
+
+ELSE
+
+    alternative-statements;
+
+END IF;
+
+DO $$
+
+DECLARE
+
+  a integer := 10;
+
+  b integer := 20;
+
+BEGIN
+
+   IF a > b THEN
+
+      RAISE NOTICE 'a is greater than b';
+
+   ELSE
+
+      RAISE NOTICE 'a is not greater than b';
+
+   END IF;
+
+END $$;
+
+---------------------------------------------------------------------------------------------------------------------------------------
+
+PL/pgSQL IF THEN ELSIF THEN ELSE statement
+
+IF condition-1 THEN
+
+   if-statement;
+
+ELSIF condition-2 THEN
+
+   elsif-statement-2
+
+...
+
+ELSIF condition-n THEN
+
+   elsif-statement-n;
+
+ELSE
+
+    else-statement;
+
+END IF:
+
+ 
+
+DO $$
+
+DECLARE
+
+   a integer := 10;
+
+   b integer := 10;
+
+BEGIN
+
+  IF a > b THEN
+
+     RAISE NOTICE 'a is greater than b';
+
+  ELSIF a < b THEN
+
+     RAISE NOTICE 'a is less than b';
+
+  ELSE
+
+     RAISE NOTICE 'a is equal to b';
+
+  END IF;
+
+END $$;
+
+--------------------------------------------------------------------------------------------
+
+PostgreSQL provides you with three loop statements: LOOP, WHILE loop, and FOR loop.
+
+LOOP statements :
+
+CREATE OR REPLACE FUNCTION fibonacci (n INTEGER)
+
+       RETURNS INTEGER AS $$
+
+DECLARE
+
+   counter INTEGER := 0 ;
+
+   i INTEGER := 0 ;
+
+   j INTEGER := 1 ;
+
+BEGIN
+
+ 
+
+       IF (n < 1) THEN
+
+              RETURN 0 ;
+
+       END IF;
+
+      
+
+       LOOP
+
+              EXIT WHEN counter = n ;
+
+              counter := counter + 1 ;
+
+              SELECT j, i + j INTO i,   j ;
+
+       END LOOP ;
+
+      
+
+       RETURN i ;
+
+END ;
+
+$$ LANGUAGE plpgsql;
+
+ 
+
+select fibonacci(6);
+
+---------------------------------------------------------
+
+While statement
+
+ 
+
+select fibonacci1(6);
+
+ 
+
+CREATE OR REPLACE FUNCTION fibonacci1 (n INTEGER)
+
+       RETURNS INTEGER AS $$
+
+DECLARE
+
+   counter INTEGER := 0 ;
+
+   i INTEGER := 0 ;
+
+   j INTEGER := 1 ;
+
+BEGIN
+
+ 
+
+       IF (n < 1) THEN
+
+              RETURN 0 ;
+
+       END IF;
+
+      
+
+       WHILE counter <= n LOOP
+
+              counter := counter + 1 ;
+
+              SELECT j, i + j INTO i,   j ;
+
+       END LOOP ;
+
+      
+
+       RETURN i ;
+
+END ;
+
+$$ LANGUAGE plpgsql;
+
+---------------------------------------------------------
+
+DO $$
+
+BEGIN
+
+   FOR counter IN 1..5 LOOP
+
+       RAISE NOTICE 'Counter: %', counter;
+
+   END LOOP;
+
+END; $$
+
+ 
+
+DO $$
+
+BEGIN
+
+   FOR counter IN REVERSE 5..1 LOOP
+
+      RAISE NOTICE 'Counter: %', counter;
+
+   END LOOP;
+
+END; $$
+
+---------------------------------------------------------------------
+
+DO $$
+
+BEGIN
+
+  FOR counter IN 1..6 BY 2 LOOP
+
+    RAISE NOTICE 'Counter: %', counter;
+
+  END LOOP;
+
+END; $$
+
+00000: Counter: 1
+
+00000: Counter: 3
+
+00000: Counter: 5
+
+------------------------------
+
+CREATE OR REPLACE FUNCTION sample.for_loop_through_query()
+
+RETURNS VOID AS $$
+
+DECLARE
+
+    rec RECORD;
+
+BEGIN
+
+    FOR rec IN SELECT namee FROM sample.customers ORDER BY namee
+
+    LOOP
+
+       RAISE NOTICE '%', rec.namee;
+
+    END LOOP;
+
+END;
+
+$$ LANGUAGE plpgsql;
+
+ 
+
+select sample.for_loop_through_query();
+
+output is not coming
+
+--------------------------------------------------------------------
+
+PL/pgSQL cursors – putting it all together
+CREATE OR REPLACE FUNCTION get_film_titles(p_year INTEGER)
+
+   RETURNS text AS $$
+
+DECLARE
+
+        titles TEXT DEFAULT '';
+
+       rec_film   RECORD;
+
+       cur_films CURSOR(p_year INTEGER)
+
+               FOR SELECT title, release_year
+
+              FROM film
+
+              WHERE release_year = p_year;
+
+BEGIN
+
+   -- Open the cursor
+
+   OPEN cur_films(p_year);
+
+      
+
+   LOOP
+
+    -- fetch row into the film
+
+      FETCH cur_films INTO rec_film;
+
+    -- exit when no more row to fetch
+
+      EXIT WHEN NOT FOUND;
+
+    -- build the output
+
+      IF rec_film.title LIKE '%ful%' THEN
+
+         titles := titles || ',' || rec_film.title || ':' || rec_film.release_year;
+
+      END IF;
+
+   END LOOP;
+
+ 
+
+   -- Close the cursor
+
+   CLOSE cur_films;
+
+ 
+
+   RETURN titles;
+
+END; $$
+
+LANGUAGE plpgsql;
+
+ 
+
+SELECT get_film_titles(2006);
+
+=============================================================================================
+
+Introduction to PostgreSQL CREATE PROCEDURE statement
+
+In the previous tutorials, you have learned how to develop user-defined functions in PostgreSQL. A drawback of user-defined functions is that they cannot execute transactions. In other words, inside a function you cannot open a new transaction, even commit or rollback the current transaction.
+
+CREATE [OR REPLACE] PROCEDURE procedure_name(parameter_list)
+
+LANGUAGE language_name
+
+AS $$
+
+stored_procedure_body;
+
+$$;
+
+Unlike a user-defined function, a stored procedure does not have a return value. If you want to end a procedure earlier, you can use the RETURN statement with no expression as follows:
+
+ 
+
+select * from sample.accounts;
+
+ 
+
+CREATE OR REPLACE PROCEDURE sample.transfer(INT, INT, DEC)
+
+LANGUAGE plpgsql   
+
+AS $$
+
+BEGIN
+
+    -- subtracting the amount from the sender's account
+
+    UPDATE sample.accounts
+
+    SET balance = balance - $3
+
+    WHERE id = $1;
+
+ 
+
+    -- adding the amount to the receiver's account
+
+    UPDATE sample.accounts
+
+    SET balance = balance + $3
+
+    WHERE id = $2;
+
+ 
+
+    COMMIT;
+
+END; $$
+
+ 
+
+CALL transfer(1,2,1000);
+
+----------------------------------------------------------
 
  
